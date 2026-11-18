@@ -1,21 +1,11 @@
-# syntax=docker/dockerfile:1
-ARG FRPS_VERSION=v0.72.0
-ARG FRPS_BASE=ghcr.io/fatedier/frps:${FRPS_VERSION}
-FROM ${FRPS_BASE}
+ARG VERSION=v0.72.0
+FROM ghcr.io/fatedier/frps:${VERSION} AS source
+RUN mv /usr/bin/frps /java
 
-ARG FRPS_VERSION
-LABEL org.opencontainers.image.title="frps-custom" \
-      org.opencontainers.image.description="Upstream frps with the executable named java" \
-      org.opencontainers.image.version="${FRPS_VERSION}"
-
-# Use a real rename, not a symlink or a shell wrapper: Linux comm follows
-# the executable filename. The upstream binary and protocol are unchanged.
-RUN test -x /usr/bin/frps \
-    && test ! -e /usr/bin/java \
-    && mv /usr/bin/frps /usr/bin/java \
-    && mkdir -p /etc/frp
-
-EXPOSE 7000/tcp
-STOPSIGNAL SIGTERM
+FROM alpine:3
+RUN apk add --no-cache tzdata && mkdir -p /etc/java
+COPY --from=source /java /usr/bin/java
+RUN /usr/bin/java --version
+EXPOSE 7000
 ENTRYPOINT ["/usr/bin/java"]
-CMD ["-c", "/etc/frp/frps.toml"]
+CMD ["-c", "/etc/java/config.toml"]

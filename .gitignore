@@ -1,6 +1,4 @@
-__pycache__/
-*.py[cod]
 .DS_Store
-.env
-config/frps.toml
-*.log
+__pycache__/
+config/*.toml
+!config/config.example.toml
